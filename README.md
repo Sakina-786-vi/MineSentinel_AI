@@ -4,14 +4,13 @@
 
 **Sense → Predict → Alert.** A low-cost, indigenous IoT + AI platform that turns silent ground movement into actionable early warnings — before subsidence becomes a disaster.
 
-
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-ML%20Engine-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
-[![React](https://img.shields.io/badge/React.js-Dashboard-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![ESP32](https://img.shields.io/badge/ESP32-Firmware-E7352C?logo=espressif&logoColor=white)](https://www.espressif.com/)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](#-license)
-
-
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python"/></a>
+  <a href="https://www.tensorflow.org/"><img src="https://img.shields.io/badge/TensorFlow-ML%20Engine-FF6F00?logo=tensorflow&logoColor=white" alt="TensorFlow"/></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React.js-Dashboard-61DAFB?logo=react&logoColor=black" alt="React"/></a>
+  <a href="https://www.espressif.com/"><img src="https://img.shields.io/badge/ESP32-Firmware-E7352C?logo=espressif&logoColor=white" alt="ESP32"/></a>
+  <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-lightgrey.svg" alt="License"/></a>
+</p>
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Prototype%20Validated-success?style=flat-square" alt="status"/>
   <img src="https://img.shields.io/badge/Deployment-Underground%20Coal%20Mines-black?style=flat-square" alt="deployment"/>
