@@ -23,16 +23,12 @@
 
 - [The Problem](#-the-problem)
 - [Our Solution](#-our-solution)
-- [System Architecture](#-system-architecture)
 - [Hardware Node](#-hardware-node)
 - [Tech Stack](#-tech-stack)
 - [Impact & Beneficiaries](#-impact--beneficiaries)
 - [Research Benchmark](#-research-benchmark)
 - [Repository Structure](#-repository-structure)
 - [Getting Started](#-getting-started)
-- [Demo](#-demo)
-- [Roadmap](#-roadmap)
-- [License](#-license)
 
 ---
 
@@ -284,14 +280,6 @@ Configure the gateway's Wi-Fi/4G/Ethernet settings to point to your backend serv
 - [ ] Multi-mine fleet management console
 - [ ] SMS/IVR alerts for low-connectivity regions
 - [ ] Solar-assisted power module for extended field deployment
-
----
-
-
-## 📄 License
-
-This project is submitted for **Smart India Hackathon 2026** under Team **Game Changers (SIH006)**.
-Licensed under the [MIT License](LICENSE) unless otherwise specified by hackathon guidelines.
 
 ---
 
