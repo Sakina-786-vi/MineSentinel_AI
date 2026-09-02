@@ -210,7 +210,6 @@ MineSentinel AI was designed after benchmarking against current state-of-the-art
 
 ## 📁 Repository Structure
 
-> *Suggested structure — update to match your actual repo layout.*
 
 ```
 minesentinel-ai/
