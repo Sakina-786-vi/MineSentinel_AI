@@ -34,8 +34,7 @@
 
 ## 🚨 The Problem
 
-> **Problem Statement ID:** `SIH26025`
-> **Title:** Development of an AI-enabled Low-Cost Real-Time Mine Subsidence Monitoring, Prediction and Early Warning System for Underground Coal Mines in India.
+>  Development of an AI-enabled Low-Cost Real-Time Mine Subsidence Monitoring, Prediction and Early Warning System for Underground Coal Mines in India.
 
 Underground coal mining leaves behind voids that can trigger **ground subsidence** — a slow, often invisible process that can suddenly become catastrophic, threatening:
 
