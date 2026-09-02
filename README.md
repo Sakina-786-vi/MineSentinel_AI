@@ -4,11 +4,6 @@
 
 **Sense → Predict → Alert.** A low-cost, indigenous IoT + AI platform that turns silent ground movement into actionable early warnings — before subsidence becomes a disaster.
 
-[![Smart India Hackathon 2026](https://img.shields.io/badge/SIH-2026-orange?style=for-the-badge)](https://sih.gov.in)
-[![Problem Statement](https://img.shields.io/badge/PS%20ID-SIH26025-blue?style=for-the-badge)]()
-[![Theme](https://img.shields.io/badge/Theme-Smart%20Automation-green?style=for-the-badge)]()
-[![Team](https://img.shields.io/badge/Team-Game%20Changers-purple?style=for-the-badge)]()
-
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-ML%20Engine-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
 [![React](https://img.shields.io/badge/React.js-Dashboard-61DAFB?logo=react&logoColor=black)](https://react.dev/)
