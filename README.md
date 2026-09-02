@@ -23,7 +23,9 @@
 
 - [The Problem](#-the-problem)
 - [Our Solution](#-our-solution)
+- [Why MineSentinel Wins](#-why-minesentinel-wins)
 - [Hardware Node](#-hardware-node)
+- [Circuit Diagrams & Wiring](#-circuit-diagrams--wiring)
 - [Tech Stack](#-tech-stack)
 - [Impact & Beneficiaries](#-impact--beneficiaries)
 - [Research Benchmark](#-research-benchmark)
@@ -122,6 +124,30 @@ Each **MineSentinel AI Monitoring Node** is a self-contained unit built for hars
 
 ---
 
+## 🔌 Circuit Diagrams & Wiring
+
+Complete pin-level wiring references for every subsystem in the MineSentinel network — from the sensor node to the gateway relay.
+
+### 1. Complete Connection Diagram — Sensor Node (MPU6050 / BMP280 / DHT22 / HC-SR04)
+
+<p align="center">
+  <img src="assets/WhatsApp%20Image%202026-09-02%20at%201.35.51%20PM.jpeg" alt="MineSentinel AI complete connection diagram showing ESP32 wired to MPU6050, BMP280, DHT22, HC-SR04, status LEDs, buzzer, and Li-Po power supply" width="850"/>
+</p>
+
+Full ESP32 wiring covering the MPU6050 (tilt/vibration), BMP280 (temperature/pressure), DHT22 (temperature/humidity), and HC-SR04 (distance/displacement, with the required 1kΩ/2kΩ voltage divider on ECHO). Includes the Green/Yellow/Red risk-indicator LEDs, alarm buzzer, and the 3.7V Li-Po → 5V boost converter power supply. A full pin-mapping table and safety notes (common GND, no 5V on 3.3V pins, voltage divider requirement) are included on the diagram.
+
+
+### 2. Gateway Node — ESP32 + NRF24L01
+
+<p align="center">
+  <img src="assets/WhatsApp%20Image%202026-09-02%20at%201.42.32%20PM.jpeg" alt="Gateway node connection diagram showing ESP32 wired to NRF24L01 module with pin mapping table and data flow from sensor node to cloud" width="850"/>
+</p>
+
+The **Gateway Node** aggregates readings from all deployed sensor nodes over the NRF24L01 radio link and forwards them to the cloud/dashboard over Wi-Fi. The diagram includes the full VCC/GND/CE/CSN/SCK/MISO/MOSI pin table, a note on the required decoupling capacitor (10–22µF near the NRF module for power stability), and the end-to-end data flow: **Sensor Node → NRF24L01 → ESP32 Gateway → Wi-Fi → Cloud/Dashboard.**
+
+
+---
+
 ## 🧰 Tech Stack
 
 <table>
@@ -210,7 +236,6 @@ MineSentinel AI was designed after benchmarking against current state-of-the-art
 
 ## 📁 Repository Structure
 
-
 ```
 minesentinel-ai/
 ├── firmware/                # ESP32 node firmware (sensor fusion, NRF24L01 comms)
@@ -225,7 +250,10 @@ minesentinel-ai/
 │   └── public/
 ├── mobile-app/               # Mobile application source
 ├── docs/                     # Architecture diagrams, research references
-├── assets/                   # Pitch deck, prototype images, demo video/QR
+├── assets/                   # Pitch deck, circuit diagrams, prototype images, demo video/QR
+│   ├── minesentinel-circuit-diagram.jpeg
+│   ├── sensor-node-wiring-diagram.jpeg
+│   └── gateway-node-wiring-diagram.jpeg
 └── README.md
 ```
 
@@ -249,23 +277,31 @@ cd minesentinel-ai
 ```bash
 cd firmware/node
 # Open in Arduino IDE / PlatformIO, select ESP32 board, and upload
+# Wire the board per assets/minesentinel-circuit-diagram.jpeg (or the alternate build in assets/sensor-node-wiring-diagram.jpeg)
 ```
 
-### 3️⃣ Set up the backend & AI engine
+### 3️⃣ Wire and flash the gateway node
+```bash
+cd firmware/gateway
+# Wire ESP32 + NRF24L01 per assets/gateway-node-wiring-diagram.jpeg
+# Upload the gateway firmware
+```
+
+### 4️⃣ Set up the backend & AI engine
 ```bash
 cd backend
 pip install -r requirements.txt
 python app.py    # or: uvicorn api.main:app --reload
 ```
 
-### 4️⃣ Launch the web dashboard
+### 5️⃣ Launch the web dashboard
 ```bash
 cd dashboard
 npm install
 npm run dev
 ```
 
-### 5️⃣ Connect the gateway
+### 6️⃣ Connect the gateway
 Configure the gateway's Wi-Fi/4G/Ethernet settings to point to your backend server endpoint, then power on the deployed nodes.
 
 ---
