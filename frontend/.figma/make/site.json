@@ -1,0 +1,10 @@
+{
+  "description": "Monitors mine surface deformation in real time using AI and IoT sensors to provide early warnings and risk assessments for enhanced mine safety.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
