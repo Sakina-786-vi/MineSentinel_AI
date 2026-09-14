@@ -3,6 +3,7 @@
 ### AI-Powered Real-Time Mine Subsidence Monitoring & Early Warning System
 
 **Sense → Predict → Alert.** A low-cost, indigenous IoT + AI platform that turns silent ground movement into actionable early warnings — before subsidence becomes a disaster.
+- NVIDIA Nemotron — AI reasoning, contextual interpretation and explainable risk summaries
 
 <p align="center">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python"/></a>
@@ -64,8 +65,8 @@ Today, most mines rely on **periodic manual surveys** or **satellite-based InSAR
 - **🔮 Predictive, not just reactive** — detects emerging risk from deformation trends using a mesh node network, instead of waiting for damage to appear.
 - **💰 Low-cost & indigenous** — built on ESP32 and commodity sensors, making mine-wide deployment financially realistic.
 - **📐 Spatially scalable** — multiple surface nodes pinpoint *where* deformation is developing and *how* it's progressing across a panel.
-- **🔁 One unified pipeline** — combines IoT sensing, AI prediction, visualization, and early warning into a single platform: **Sense → Predict → Alert.**
-
+- **🔁 One unified pipeline** — combines IoT sensing, AI prediction, visualization, and early warning into a single platform:
+- **Sense → Predict → Alert.**
 ---
 
 ## 🏆 Why MineSentinel Wins
@@ -83,21 +84,42 @@ Today, most mines rely on **periodic manual surveys** or **satellite-based InSAR
 ## 🏗️ System Architecture
 
 ```
-┌─────────────────────┐     ┌──────────────────────┐     ┌───────────────┐     ┌────────────────────────┐
-│ 1. SURFACE SENSOR    │     │ 2. WIRELESS           │     │ 3. GATEWAY    │     │ 4. CLOUD / SERVER      │
-│    NODES             │────▶│    COMMUNICATION      │────▶│   (Data       │────▶│   (AI Processing)      │
-│  (MineSentinel Node) │     │   NRF24L01 Mesh Net   │     │  Aggregator)  │     │                        │
-│  Tilt•Vibration•Env  │     │   Node1..N → Gateway  │     │  Wi-Fi/4G/    │     │  • ML Anomaly Detection │
-└─────────────────────┘     └──────────────────────┘     │  Ethernet     │     │  • Trend & Risk Analysis│
-                                                            └───────────────┘     │  • Historical + Live DB │
-                                                                                   │  • Alert Engine (SMS/  │
-                                                                                   │    Email/Push)          │
-                                                                                   └───────────┬────────────┘
-                                                                                                │
-                                                                    ┌───────────────────────────┴──────────────────────────┐
-                                                                    │                5. USER APPLICATIONS                    │
-                                                                    │        🖥️  Web Dashboard      📱 Mobile App             │
-                                                                    └─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────┐
+│      LIVE SENSOR DATA       │
+│ Tilt • Displacement •       │
+│ Vibration • Environment     │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│     SIGNAL PROCESSING       │
+│ Filtering • Calibration     │
+│ Feature Extraction          │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│    ANOMALY DETECTION        │
+│ Isolation Forest / Statistics│
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│       RISK ENGINE            │
+│ Trend + Persistence +       │
+│ Multi-sensor correlation    │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│     NVIDIA NEMOTRON         │
+│ AI Reasoning & Explanation  │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│   OPERATOR INTELLIGENCE     │
+│ Explanation • Insight •     │
+│ Recommendation              │
+└──────────────┬──────────────┘
+               ↓
+        Dashboard + Alerts
 ```
 
 **Data flow:** Multiple `MineSentinel Nodes` are deployed across an underground mine panel → sensor readings are relayed wirelessly through an NRF24L01 mesh → aggregated at a local `Gateway` → pushed to the cloud AI engine for anomaly detection & subsidence prediction → risk scores and alerts are surfaced live on the **Web Dashboard** and **Mobile App**.
