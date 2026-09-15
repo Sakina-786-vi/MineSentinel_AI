@@ -328,7 +328,7 @@ Configure the gateway's Wi-Fi/4G/Ethernet settings to point to your backend serv
 
 ---
 
-### 🗺️ Roadmap
+## 🗺️ Roadmap
 
 - [ ] Expand mesh network range with LoRa for deep-mine coverage
 - [ ] Integrate satellite InSAR data as a supplementary validation layer
