@@ -63,7 +63,7 @@ Today, most mines rely on **periodic manual surveys** or **satellite-based InSAR
 ### 🌟 Unique Value Proposition
 
 - **🔮 Predictive, not just reactive** — detects emerging risk from deformation trends using a mesh node network, instead of waiting for damage to appear.
-- **💰 Low-cost & indigenous** — built on ESP32 and commodity sensors, making mine-wide deployment financially realistic.
+- **💰 Low-cost & indigenous** — built on ESP32 and commodity sensors, making mine-wide deployment financially realistic .
 - **📐 Spatially scalable** — multiple surface nodes pinpoint *where* deformation is developing and *how* it's progressing across a panel.
 - **🔁 One unified pipeline** — combines IoT sensing, AI prediction, visualization, and early warning into a single platform:
 - **Sense → Predict → Alert.**
