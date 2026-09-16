@@ -335,7 +335,7 @@ Configure the gateway's Wi-Fi/4G/Ethernet settings to point to your backend serv
 - [ ] Add predictive maintenance analytics for node health
 - [ ] Multi-mine fleet management console
 - [ ] SMS/IVR alerts for low-connectivity regions
-- [ ] Solar-assisted power module for extended field deployment
+- [ ] Solar-assisted power module for extended field deployment .
 
 ---
 
