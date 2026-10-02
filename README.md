@@ -83,48 +83,93 @@ Today, most mines rely on **periodic manual surveys** or **satellite-based InSAR
 
 ## 🏗️ System Architecture
 
+```mermaid
+flowchart LR
+
+    A["⛏️ Mine Environment<br/>Tilt • Vibration • Distance • Environment<br/>RF Human Presence"]
+
+    B["📡 MineSentinel Sensor Nodes<br/>ESP32 + MPU6050 + BMP280 + DHT22<br/>Ultrasonic + nRF24L01"]
+
+    C["📶 NRF24L01 Mesh Network<br/>Low-Power Wireless Communication"]
+
+    D["🛰️ Gateway<br/>Data Aggregation<br/>Local Backup"]
+
+    E["🗄️ Backend / Data Layer<br/>Validation • Processing • Storage"]
+
+    F["🤖 AI / ML Engine<br/>Isolation Forest<br/>Anomaly Detection"]
+
+    G["📊 Risk Engine<br/>Trend + Persistence<br/>Safe • Warning • Critical"]
+
+    H["🚨 Alert Engine<br/>LED • Buzzer • Notifications"]
+
+    I["💻 Web Dashboard<br/>Live Monitoring • Trends • History"]
+
+    J["📴 Offline Safety Mode<br/>SD Card + LED + Buzzer<br/>Continues Without Internet"]
+
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    G --> I
+
+    B -. "Network unavailable" .-> J
+    D -. "Local backup" .-> J
+
 ```
 
-┌─────────────────────────────┐
-│      LIVE SENSOR DATA       │
-│ Tilt • Displacement •       │
-│ Vibration • Environment     │
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│     SIGNAL PROCESSING       │
-│ Filtering • Calibration     │
-│ Feature Extraction          │
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│    ANOMALY DETECTION        │
-│ Isolation Forest / Statistics│
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│       RISK ENGINE            │
-│ Trend + Persistence +       │
-│ Multi-sensor correlation    │
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│     NVIDIA NEMOTRON         │
-│ AI Reasoning & Explanation  │
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│   OPERATOR INTELLIGENCE     │
-│ Explanation • Insight •     │
-│ Recommendation              │
-└──────────────┬──────────────┘
-               ↓
-        Dashboard + Alerts
-```
+### 🔄 Data Flow
+
+**Sensor Nodes → NRF24L01 Mesh → Gateway → Backend → AI/ML → Risk Engine → Alerts + Dashboard**
+
+> **Offline-first:** Critical monitoring continues locally through storage, LED and buzzer alerts when connectivity is unavailable.
 
 **Data flow:** Multiple `MineSentinel Nodes` are deployed across an underground mine panel → sensor readings are relayed wirelessly through an NRF24L01 mesh → aggregated at a local `Gateway` → pushed to the cloud AI engine for anomaly detection & subsidence prediction → risk scores and alerts are surfaced live on the **Web Dashboard** and **Mobile App**.
 
 ---
+---
+
+## 🔄 MineSentinel System Flowchart
+
+![MineSentinel AI System Flowchart](./assets/MineSentinel%20AI%20System%20Flowchart.png)
+
+### End-to-End Flow
+
+```mermaid
+flowchart LR
+
+    A["1. Mine Environment<br/>Ground • Vibration • Distance • Environment"]
+    B["2. Smart Sensor Node<br/>MPU6050 • BMP280 • DHT22 • Ultrasonic<br/>+ RF Human Detection"]
+    C["3. ESP32 Edge Layer<br/>Sensor Fusion • Local Processing"]
+    D["4. NRF24L01 Mesh<br/>Low-Power Wireless Communication"]
+    E["5. Gateway<br/>Data Aggregation"]
+    F["6. AI / ML Engine<br/>Stage 1: Anomaly Detection<br/>Stage 2: Risk Prediction"]
+    G["7. Risk Engine<br/>Safe • Warning • Critical"]
+    H["8. Dashboard & Alerts<br/>Web • Mobile • Real-Time Insights"]
+
+    A --> B --> C --> D --> E --> F --> G --> H
+
+    C -.-> I["Offline-First Safety<br/>SD Card + LED + Buzzer"]
+    
+    classDef source fill:#EAF4FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
+    classDef edge fill:#EEF2FF,stroke:#4F46E5,stroke-width:2px,color:#0F172A;
+    classDef comm fill:#ECFDF5,stroke:#059669,stroke-width:2px,color:#0F172A;
+    classDef ai fill:#FFF7ED,stroke:#EA580C,stroke-width:2px,color:#0F172A;
+    classDef output fill:#F5F3FF,stroke:#7C3AED,stroke-width:2px,color:#0F172A;
+    classDef offline fill:#FFF1F2,stroke:#E11D48,stroke-width:2px,color:#0F172A;
+
+    class A,B source;
+    class C edge;
+    class D,E comm;
+    class F,G ai;
+    class H output;
+    class I offline;
+```
+
+> **Sense → Detect → Process → Predict → Alert**
 
 ## 🔧 Hardware Node
 
