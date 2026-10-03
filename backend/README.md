@@ -65,22 +65,46 @@ pip install -r requirements.txt
 Start the API:
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
+The server must bind to `0.0.0.0` (as in the command above); without `--host
+0.0.0.0`, Uvicorn listens only on localhost and an ESP32 cannot connect.
+For this PC's current Wi-Fi connection, the ESP32 URL is
+`http://10.143.248.166:8000/api/sensor-data`. Confirm the address with
+`ipconfig` after reconnecting to Wi-Fi and update/reflash the gateway if it
+changes. The ESP32 and PC must be on the same reachable network. Windows
+Firewall has an inbound TCP 8000 allow rule for this gateway.
+
+Setting `BACKEND_URL` alone does not send readings: the firmware must connect
+to Wi-Fi, POST the required JSON fields to that URL, and check the HTTP status.
+Use `http://10.143.248.166:8000/api/health` from a device on the same Wi-Fi to
+verify connectivity, then check
+`http://10.143.248.166:8000/api/debug/pipeline?node_id=MS-1` for the last
+packet received by the backend. An increasing `reading_count` and a recent
+`latest.received_at` confirm ingestion; the frontend polls the latest stored
+packet and marks packets older than 30 seconds as stale.
+Start the command from the `backend` directory. The `app.main` entry point
+exposes the existing `main.py` application without moving the backend modules.
 
 ## API endpoints
 
 `POST /api/sensor-data` validates and stores the ESP32 JSON payload, then returns the reading, engineered features, threshold result, anomaly status, risk score, and alert information.
 
-`GET /api/latest?node_id=N01` returns the latest reading for one node. Without `node_id`, it returns the latest reading for every known node.
+`GET /api/latest?node_id=MS-1` returns the latest reading for one node. Without `node_id`, it returns the latest reading for every known node.
 
-`GET /api/history?node_id=N01&limit=100` returns readings in chronological order. The limit is capped at 1,000.
+The UI marks readings older than 30 seconds as stale; it displays the newest
+stored packet but does not synthesize new sensor values. Check
+`GET /api/debug/pipeline?node_id=MS-1` for the latest stored packet and its
+receipt time. A current reading requires the gateway to keep posting fresh
+packets to `POST /api/sensor-data`.
+
+`GET /api/history?node_id=MS-1&limit=100` returns readings in chronological order. The limit is capped at 1,000.
 
 `GET /api/nodes` returns the known node identifiers.
 
-`GET /api/risk?node_id=N01` returns the latest full risk assessment for a node. Without `node_id`, it returns one assessment per known node.
+`GET /api/risk?node_id=MS-1` returns the latest full risk assessment for a node. Without `node_id`, it returns one assessment per known node.
 
 `GET /api/health` reports whether a trained Isolation Forest is available. If the model file is missing or cannot be loaded, the backend remains usable in clearly reported threshold-only mode.
 

@@ -48,22 +48,26 @@ pip install -r requirements.txt
 Start the API:
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
+The `0.0.0.0` host is required for ESP32 access over Wi-Fi; without it,
+Uvicorn only accepts connections from this PC. Set the ESP32 URL to
+`http://<PC-Wi-Fi-IPv4>:8000/api/sensor-data` and use
+`GET /api/debug/pipeline?node_id=MS-1` to confirm packets are reaching SQLite.
 
 ## API endpoints
 
 `POST /api/sensor-data` validates and stores the ESP32 JSON payload, then returns the reading, engineered features, threshold result, anomaly status, risk score, and alert information.
 
-`GET /api/latest?node_id=N01` returns the latest reading for one node. Without `node_id`, it returns the latest reading for every known node.
+`GET /api/latest?node_id=MS-1` returns the latest reading for one node. Without `node_id`, it returns the latest reading for every known node.
 
-`GET /api/history?node_id=N01&limit=100` returns readings in chronological order. The limit is capped at 1,000.
+`GET /api/history?node_id=MS-1&limit=100` returns readings in chronological order. The limit is capped at 1,000.
 
 `GET /api/nodes` returns the known node identifiers.
 
-`GET /api/risk?node_id=N01` returns the latest full risk assessment for a node. Without `node_id`, it returns one assessment per known node.
+`GET /api/risk?node_id=MS-1` returns the latest full risk assessment for a node. Without `node_id`, it returns one assessment per known node.
 
 `GET /api/health` reports whether a trained Isolation Forest is available. If the model file is missing or cannot be loaded, the backend remains usable in clearly reported threshold-only mode.
 

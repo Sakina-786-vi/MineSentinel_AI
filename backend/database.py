@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from typing import Any, Iterator
 
@@ -69,6 +69,21 @@ CREATE TABLE IF NOT EXISTS alerts (
     FOREIGN KEY(reading_id) REFERENCES sensor_readings(id)
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_node_timestamp ON alerts(node_id, timestamp DESC);
+
+CREATE TABLE IF NOT EXISTS node_locations (
+    node_id TEXT PRIMARY KEY,
+    location_source TEXT NOT NULL CHECK(location_source IN ('geographic', 'local_mine_plan')),
+    latitude REAL,
+    longitude REAL,
+    local_x REAL,
+    local_y REAL,
+    elevation_or_depth REAL,
+    coordinate_system TEXT,
+    installation_description TEXT,
+    location_accuracy REAL,
+    location_verified INTEGER NOT NULL DEFAULT 0,
+    last_updated TEXT NOT NULL
+);
 """
 
 
@@ -178,12 +193,91 @@ def fetch_latest(node_id: str | None = None) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+def fetch_latest_analysis(node_id: str | None = None) -> list[dict[str, Any]]:
+    where = "WHERE node_id = ?" if node_id else ""
+    parameters = (node_id,) if node_id else ()
+    with get_connection() as connection:
+        rows = connection.execute(
+            f"""SELECT r.*, p.features_json, p.thresholds_json, p.anomaly_json, p.risk_json
+                FROM sensor_readings r
+                LEFT JOIN processing_records p ON p.reading_id = r.id
+                WHERE r.id IN (
+                    SELECT MAX(id) FROM sensor_readings {where} GROUP BY node_id
+                )
+                ORDER BY r.node_id ASC""",
+            parameters,
+        ).fetchall()
+    result = []
+    for row in rows:
+        item = dict(row)
+        for key in ("features", "thresholds", "anomaly", "risk"):
+            serialized = item.pop(f"{key}_json")
+            item[key] = json.loads(serialized) if serialized is not None else None
+        result.append(item)
+    return result
+
+
 def fetch_nodes() -> list[str]:
     with get_connection() as connection:
         rows = connection.execute(
             "SELECT DISTINCT node_id FROM sensor_readings ORDER BY node_id"
         ).fetchall()
     return [row["node_id"] for row in rows]
+
+
+def fetch_node_location(node_id: str) -> dict[str, Any] | None:
+    with get_connection() as connection:
+        row = connection.execute(
+            "SELECT * FROM node_locations WHERE node_id = ?", (node_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    location = dict(row)
+    location["location_verified"] = bool(location["location_verified"])
+    return location
+
+
+def save_node_location(node_id: str, location: dict[str, Any], *, replace_verified: bool = False) -> dict[str, Any]:
+    current = fetch_node_location(node_id)
+    fields = (
+        "location_source", "latitude", "longitude", "local_x", "local_y",
+        "elevation_or_depth", "coordinate_system", "installation_description",
+        "location_accuracy", "location_verified",
+    )
+    if current and current["location_verified"] and any(
+        current[field] != location.get(field) for field in fields
+    ) and not replace_verified:
+        raise ValueError("A verified location requires explicit replacement confirmation")
+
+    updated = {
+        "node_id": node_id,
+        **{field: location.get(field) for field in fields},
+        "last_updated": datetime.now(timezone.utc).isoformat(),
+    }
+    with get_connection() as connection:
+        connection.execute(
+            """INSERT INTO node_locations
+               (node_id, location_source, latitude, longitude, local_x, local_y,
+                elevation_or_depth, coordinate_system, installation_description,
+                location_accuracy, location_verified, last_updated)
+               VALUES (:node_id, :location_source, :latitude, :longitude, :local_x, :local_y,
+                       :elevation_or_depth, :coordinate_system, :installation_description,
+                       :location_accuracy, :location_verified, :last_updated)
+               ON CONFLICT(node_id) DO UPDATE SET
+                 location_source = excluded.location_source,
+                 latitude = excluded.latitude,
+                 longitude = excluded.longitude,
+                 local_x = excluded.local_x,
+                 local_y = excluded.local_y,
+                 elevation_or_depth = excluded.elevation_or_depth,
+                 coordinate_system = excluded.coordinate_system,
+                 installation_description = excluded.installation_description,
+                 location_accuracy = excluded.location_accuracy,
+                 location_verified = excluded.location_verified,
+                 last_updated = excluded.last_updated""",
+            {**updated, "location_verified": int(bool(updated["location_verified"]))},
+        )
+    return {**updated, "location_verified": bool(updated["location_verified"])}
 
 
 def save_analysis(reading_id: int, analysis: dict[str, Any], model_version: str | None) -> None:

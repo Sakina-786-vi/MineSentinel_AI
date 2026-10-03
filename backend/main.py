@@ -19,11 +19,20 @@ from schemas import (
     HealthResponse,
     IngestResponse,
     NodeListResponse,
+    NodeLocationIn,
     RiskResponse,
     SensorReadingIn,
     SensorReadingOut,
 )
 from threshold_engine import evaluate_thresholds
+
+try:
+    from ml_simulator import router as ml_simulator_router
+except (ImportError, OSError) as exc:
+    ml_simulator_router = None
+    ml_simulator_import_error = exc
+else:
+    ml_simulator_import_error = None
 
 
 detector = AnomalyDetector()
@@ -48,6 +57,10 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+if ml_simulator_router is not None:
+    app.include_router(ml_simulator_router)
+else:
+    logger.warning("ML simulator routes unavailable: %s", ml_simulator_import_error)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -95,6 +108,26 @@ def _analyze_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _risk_response(row: dict[str, Any]) -> dict[str, Any]:
+    if row.get("risk") is not None:
+        risk_result = row["risk"]
+        anomaly_result = row["anomaly"] or {}
+        return {
+            "node_id": row["node_id"],
+            "timestamp": row["timestamp"],
+            "risk_score": risk_result["risk_score"],
+            "risk_level": risk_result["risk_level"],
+            "anomaly": anomaly_result.get("anomaly", False),
+            "anomaly_score": anomaly_result.get("anomaly_score"),
+            "ai_available": anomaly_result.get("ai_available", False),
+            "reasons": risk_result["reasons"],
+            "alert": risk_result["alert"],
+            "alert_status": risk_result["alert_status"],
+            "components": risk_result["components"],
+            "weights": risk_result["weights"],
+            "features": row["features"],
+            "thresholds": row["thresholds"],
+            "prototype_notice": risk_result["prototype_notice"],
+        }
     analysis = _analyze_row(row)
     return {
         "node_id": row["node_id"],
@@ -181,6 +214,30 @@ def nodes() -> dict[str, list[str]]:
     return {"nodes": database.fetch_nodes()}
 
 
+@app.get("/api/nodes/{node_id}/location")
+def node_location(node_id: str) -> dict[str, Any]:
+    if node_id not in database.fetch_nodes():
+        raise HTTPException(status_code=404, detail=f"No registered node found for {node_id}")
+    return {"node_id": node_id, "location": database.fetch_node_location(node_id)}
+
+
+@app.put("/api/nodes/{node_id}/location")
+def update_node_location(
+    node_id: str,
+    payload: NodeLocationIn,
+    replace_verified: bool = Query(default=False),
+) -> dict[str, Any]:
+    if node_id not in database.fetch_nodes():
+        raise HTTPException(status_code=404, detail=f"No registered node found for {node_id}")
+    try:
+        location = database.save_node_location(
+            node_id, payload.model_dump(), replace_verified=replace_verified
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"node_id": node_id, "location": location}
+
+
 @app.get("/api/debug/pipeline")
 def pipeline_debug(
     node_id: str = Query(default="MS-1", min_length=1, max_length=64),
@@ -216,7 +273,7 @@ def acknowledge_alert(alert_id: int) -> dict[str, Any]:
 def risk(
     node_id: str | None = Query(default=None, min_length=1, max_length=64),
 ) -> dict[str, Any] | list[dict[str, Any]]:
-    rows = database.fetch_latest(node_id=node_id)
+    rows = database.fetch_latest_analysis(node_id=node_id)
     if node_id and not rows:
         raise HTTPException(status_code=404, detail=f"No readings found for node {node_id}")
     output = [_risk_response(row) for row in rows]
