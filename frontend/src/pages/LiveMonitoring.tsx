@@ -28,14 +28,14 @@ export default function LiveMonitoring() {
   }));
 
   const isLive = live.status === "LIVE";
-  const statusColor = isLive ? "#32D583" : "#FF4D5A";
+  const statusColor = isLive ? "#32D583" : live.status === "OFFLINE" ? "#FF4D5A" : "#F5C451";
 
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "#E8EEF2", margin: 0 }}>Live Monitoring</h1>
-          <p style={{ fontSize: 12, color: "#60717E", margin: "4px 0 0" }}>Gateway packets and risk analysis refresh every second</p>
+          <p style={{ fontSize: 12, color: "#60717E", margin: "4px 0 0" }}>Gateway packets and risk analysis refresh every 0.5 seconds</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span className="blink" style={{ width: 7, height: 7, borderRadius: "50%", background: statusColor, display: "inline-block" }}/>
@@ -61,15 +61,16 @@ export default function LiveMonitoring() {
             }}>{nodeId}</button>
           );
         }) : (
-          <div style={{ color: "#60717E", fontSize: 12 }}>Waiting for nodes from backend...</div>
+          <div style={{ color: "#60717E", fontSize: 12 }}>Waiting for the first sensor reading for {selected}...</div>
         )}
       </div>
+      {!reading && selected === "MS-1" && <div style={{ color: "#F5C451", fontSize: 12 }}>Waiting for the first sensor reading for MS-1.</div>}
 
       {/* Key metrics */}
       <div style={{ display: "flex", gap: 12 }}>
         {[
           { label: "TILT", value: reading ? `${tilt}°` : "No data", color: "#27B7D7" },
-          { label: "DISPLACEMENT", value: reading ? `${disp} mm` : "No data", color: "#F28C38" },
+          { label: "DISTANCE", value: reading ? `${disp} cm` : "No data", color: "#F28C38" },
           { label: "VIBRATION", value: reading ? `${vib} g` : "No data", color: "#32D583" },
           { label: "TEMPERATURE", value: reading ? `${temp}°C` : "No data", color: "#94A3AE" },
           { label: "PRESSURE", value: reading ? pressure : "No data", color: "#94A3AE" },
@@ -87,7 +88,7 @@ export default function LiveMonitoring() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {[
           { title: "TILT (LIVE)", data: tiltData, color: "#27B7D7", unit: "°" },
-          { title: "DISPLACEMENT (LIVE)", data: dispData, color: "#F28C38", unit: " mm" },
+          { title: "DISTANCE (LIVE)", data: dispData, color: "#F28C38", unit: " cm" },
         ].map(({ title, data, color, unit }) => (
           <div key={title} style={{ background: "#111A23", border: "1px solid #263542", borderRadius: 10, padding: "14px 16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
@@ -117,7 +118,7 @@ export default function LiveMonitoring() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ background: "#0B1117" }}>
-                {["NODE", "TILT", "DISPLACEMENT", "VIBRATION", "RISK"].map(h => (
+                {["NODE", "TILT", "DISTANCE", "VIBRATION", "RISK"].map(h => (
                   <th key={h} style={{ padding: "8px 14px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#60717E", letterSpacing: "0.08em", borderBottom: "1px solid #1B2733" }}>{h}</th>
                 ))}
               </tr>
@@ -133,7 +134,7 @@ export default function LiveMonitoring() {
                       style={{ cursor: "pointer", background: selected === n.node_id ? "#16212C" : "transparent" }}>
                       <td style={{ padding: "8px 14px", fontFamily: "JetBrains Mono", fontWeight: 600, color: "#E8EEF2" }}>{n.node_id}</td>
                       <td style={{ padding: "8px 14px", fontFamily: "JetBrains Mono", color: "#94A3AE" }}>{nTilt}°</td>
-                      <td style={{ padding: "8px 14px", fontFamily: "JetBrains Mono", color: "#94A3AE" }}>{n.distance.toFixed(1)} mm</td>
+                      <td style={{ padding: "8px 14px", fontFamily: "JetBrains Mono", color: "#94A3AE" }}>{n.distance.toFixed(1)} cm</td>
                       <td style={{ padding: "8px 14px" }}>
                         <span style={{ color: "#32D583", fontWeight: 600, fontSize: 11 }}>{n.vibration.toFixed(3)}</span>
                       </td>

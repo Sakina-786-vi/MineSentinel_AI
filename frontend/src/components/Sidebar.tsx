@@ -1,17 +1,18 @@
 import { useState } from "react";
 
-type Page = "overview" | "monitoring" | "map" | "ai" | "alerts" | "sensors" | "analytics" | "reports" | "settings";
+type Page = "overview" | "monitoring" | "map" | "ai" | "simulator" | "alerts" | "sensors" | "analytics" | "reports" | "settings";
 
 const NAV: { id: Page; label: string; icon: string }[] = [
-  { id: "overview",   label: "Overview",        icon: "▦" },
-  { id: "monitoring", label: "Live Monitoring",  icon: "◎" },
-  { id: "map",        label: "Mine Map",         icon: "⊞" },
-  { id: "ai",        label: "AI Analysis",       icon: "◈" },
-  { id: "alerts",    label: "Alerts",            icon: "△" },
-  { id: "sensors",   label: "Sensor Network",    icon: "⋯" },
-  { id: "analytics", label: "Analytics",         icon: "∿" },
-  { id: "reports",   label: "Reports",           icon: "☰" },
-  { id: "settings",  label: "Settings",          icon: "⚙" },
+  { id: "overview", label: "Overview", icon: "▦" },
+  { id: "monitoring", label: "Live Monitoring", icon: "◎" },
+  { id: "map", label: "Mine Map", icon: "⊞" },
+  { id: "ai", label: "AI Analysis", icon: "◈" },
+  { id: "simulator", label: "ML Simulator", icon: "⌁" },
+  { id: "alerts", label: "Alerts", icon: "△" },
+  { id: "sensors", label: "Sensor Network", icon: "⋯" },
+  { id: "analytics", label: "Analytics", icon: "∿" },
+  { id: "reports", label: "Reports", icon: "☰" },
+  { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
 interface Props {
@@ -19,17 +20,18 @@ interface Props {
   onChange: (p: Page) => void;
   alertCount?: number;
   backendOnline?: boolean;
+  dataStatus?: string;
   lastSyncAgo?: string;
 }
 
-export default function Sidebar({ current, onChange, alertCount = 0, backendOnline = true, lastSyncAgo }: Props) {
+export default function Sidebar({ current, onChange, alertCount = 0, backendOnline = true, dataStatus = "UNKNOWN", lastSyncAgo }: Props) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <aside style={{
       width: collapsed ? 56 : 220,
       minWidth: collapsed ? 56 : 220,
-      background: "#0B1117",
+      background: "rgba(11, 17, 23, 0.94)",
       borderRight: "1px solid #263542",
       display: "flex", flexDirection: "column",
       transition: "width 0.22s ease, min-width 0.22s ease",
@@ -46,16 +48,16 @@ export default function Sidebar({ current, onChange, alertCount = 0, backendOnli
       }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <rect width="30" height="30" rx="6" fill="#16212C"/>
-            <line x1="5" y1="10" x2="25" y2="10" stroke="#263542" strokeWidth="1"/>
-            <line x1="5" y1="16" x2="25" y2="16" stroke="#263542" strokeWidth="1"/>
-            <line x1="5" y1="22" x2="25" y2="22" stroke="#263542" strokeWidth="1"/>
-            <circle cx="15" cy="10" r="2.5" fill="#2F80ED"/>
-            <circle cx="10" cy="16" r="2.5" fill="#27B7D7"/>
-            <circle cx="20" cy="16" r="2.5" fill="#F28C38"/>
-            <line x1="15" y1="10" x2="10" y2="16" stroke="#2F80ED" strokeWidth="1" strokeOpacity="0.6"/>
-            <line x1="10" y1="16" x2="20" y2="16" stroke="#27B7D7" strokeWidth="1" strokeOpacity="0.6"/>
-            <path d="M15 7 L18 13 H12 Z" fill="#FF4D5A" fillOpacity="0.7"/>
+            <rect width="30" height="30" rx="6" fill="#16212C" />
+            <line x1="5" y1="10" x2="25" y2="10" stroke="#263542" strokeWidth="1" />
+            <line x1="5" y1="16" x2="25" y2="16" stroke="#263542" strokeWidth="1" />
+            <line x1="5" y1="22" x2="25" y2="22" stroke="#263542" strokeWidth="1" />
+            <circle cx="15" cy="10" r="2.5" fill="#2F80ED" />
+            <circle cx="10" cy="16" r="2.5" fill="#27B7D7" />
+            <circle cx="20" cy="16" r="2.5" fill="#F28C38" />
+            <line x1="15" y1="10" x2="10" y2="16" stroke="#2F80ED" strokeWidth="1" strokeOpacity="0.6" />
+            <line x1="10" y1="16" x2="20" y2="16" stroke="#27B7D7" strokeWidth="1" strokeOpacity="0.6" />
+            <path d="M15 7 L18 13 H12 Z" fill="#FF4D5A" fillOpacity="0.7" />
           </svg>
         </div>
         {!collapsed && (
@@ -106,18 +108,18 @@ export default function Sidebar({ current, onChange, alertCount = 0, backendOnli
         {!collapsed ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span className="blink" style={{ width: 7, height: 7, borderRadius: "50%", background: backendOnline ? "#32D583" : "#FF4D5A", display: "inline-block" }}/>
+              <span className="blink" style={{ width: 7, height: 7, borderRadius: "50%", background: backendOnline ? "#32D583" : "#FF4D5A", display: "inline-block" }} />
               <span style={{ fontSize: 11, color: backendOnline ? "#32D583" : "#FF4D5A", fontWeight: 600 }}>
                 {backendOnline ? "SYSTEM ONLINE" : "BACKEND OFFLINE"}
               </span>
             </div>
-            <div style={{ fontSize: 11, color: "#60717E" }}>Gateway: <span style={{ color: "#94A3AE" }}>{backendOnline ? "Connected" : "Disconnected"}</span></div>
+            <div style={{ fontSize: 11, color: "#60717E" }}>Sensor data: <span style={{ color: "#94A3AE" }}>{dataStatus}</span></div>
             <div style={{ fontSize: 11, color: "#60717E" }}>Last sync: <span style={{ color: "#94A3AE", fontFamily: "JetBrains Mono" }}>{lastSyncAgo || "—"}</span></div>
             <div style={{ fontSize: 11, color: "#60717E", marginTop: 4 }}>Mine Operations</div>
           </div>
         ) : (
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <span className="blink" style={{ width: 7, height: 7, borderRadius: "50%", background: backendOnline ? "#32D583" : "#FF4D5A", display: "inline-block" }}/>
+            <span className="blink" style={{ width: 7, height: 7, borderRadius: "50%", background: backendOnline ? "#32D583" : "#FF4D5A", display: "inline-block" }} />
           </div>
         )}
       </div>

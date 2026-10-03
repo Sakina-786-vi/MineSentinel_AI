@@ -9,8 +9,14 @@ export default function Alerts() {
   const [alerts, setAlerts] = useState<StoredAlert[]>([]);
 
   useEffect(() => {
-    api.alerts("MS-1").then(setAlerts).catch(() => undefined);
-  }, [live.latest?.id]);
+    let active = true;
+    if (!live.selectedNode) {
+      setAlerts([]);
+      return () => { active = false; };
+    }
+    api.alerts(live.selectedNode).then(result => { if (active) setAlerts(result); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [live.selectedNode, live.latest?.id]);
 
   function acknowledge(id: number) {
     api.acknowledgeAlert(id).then(updated => setAlerts(prev => prev.map(alert => alert.id === id ? updated : alert))).catch(() => undefined);
@@ -113,7 +119,7 @@ export default function Alerts() {
           ))
         ) : (
           <div style={{ background: "#111A23", border: "1px solid #263542", borderRadius: 10, padding: "24px", textAlign: "center", color: "#60717E" }}>
-            No active alerts detected. All monitored node parameters are currently within normal thresholds.
+            {live.latest ? "No backend alerts are recorded for this node." : `Waiting for the first sensor reading for ${live.selectedNode ?? "the selected node"}.`}
           </div>
         )}
       </div>

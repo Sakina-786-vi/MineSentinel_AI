@@ -74,3 +74,20 @@ html, body, #root {
 .slide-in { animation: slide-in 0.2s ease-out; }
 
 .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+.app-root { position: relative; min-height: 100%; isolation: isolate; }
+.app-route-content { position: relative; z-index: 1; min-height: 100vh; }
+.background-video { position: fixed; z-index: 0; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; background: #080d13; }
+.background-video__media, .background-video__scrim { position: absolute; inset: 0; width: 100%; height: 100%; }
+.background-video__media { object-fit: cover; object-position: center; opacity: 0.28; transform: scale(1.08); transform-origin: center; filter: saturate(0.8) contrast(1.05) brightness(0.85); }
+.background-video__scrim { background: rgba(8, 13, 19, 0.04); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .background-video__media { display: none; }
+}
+
+@media (max-width: 640px) {
+  .background-video__media { opacity: 0.18; transform: none; }
+}

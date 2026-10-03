@@ -21,6 +21,7 @@ interface SensorDef {
   icon: IconComp;
   status: RiskStatus; value: number; min: number; max: number;
 }
+type LiveSensorDef = SensorDef & { data: DataPt[] };
 
 interface Alert {
   id: string; sev: "critical" | "warning" | "info";
@@ -66,8 +67,8 @@ const NAV = [
 
 const SENSOR_DEFS: SensorDef[] = [
   { id: "tilt", label: "Tilt", unit: "°", base: 2.34, spread: 0.3, icon: Navigation2, status: "warning", value: 2.34, min: 0, max: 10 },
-  { id: "disp", label: "Displacement", unit: "mm", base: 8.7, spread: 0.8, icon: Layers, status: "warning", value: 8.7, min: 0, max: 30 },
-  { id: "vib", label: "Vibration", unit: "mm/s", base: 14.2, spread: 1.5, icon: Zap, status: "danger", value: 14.2, min: 0, max: 40 },
+  { id: "disp", label: "Distance", unit: "cm", base: 8.7, spread: 0.8, icon: Layers, status: "warning", value: 8.7, min: 0, max: 30 },
+  { id: "vib", label: "Vibration", unit: "g", base: 14.2, spread: 1.5, icon: Zap, status: "danger", value: 14.2, min: 0, max: 40 },
   { id: "temp", label: "Temperature", unit: "°C", base: 28.4, spread: 0.4, icon: Thermometer, status: "safe", value: 28.4, min: 15, max: 45 },
   { id: "hum", label: "Humidity", unit: "%", base: 74, spread: 1.2, icon: Droplets, status: "safe", value: 74, min: 30, max: 100 },
 ];
@@ -86,16 +87,6 @@ const FLOW_STEPS = [
   { label: "GIS\nDashboard", icon: LayoutDashboard },
   { label: "Early\nWarning", icon: AlertTriangle },
 ];
-
-function genData(base: number, spread: number, n = 22): DataPt[] {
-  return Array.from({ length: n }, (_, i) => ({
-    t: `${i}`, v: parseFloat((base + (Math.random() - 0.5) * spread * 2).toFixed(2)),
-  }));
-}
-
-function jitter(v: number, s: number) {
-  return parseFloat((v + (Math.random() - 0.5) * s).toFixed(2));
-}
 
 function riskOf(score: number): RiskStatus {
   if (score >= 80) return "critical";
@@ -208,16 +199,17 @@ function CircularGauge({ score }: { score: number }) {
 
 interface SensorPin { id: string; cx: number; cy: number; status: RiskStatus }
 
-export function PanelMineMap({ activePin, setActivePin, nodeName = "MS-1", riskStatus = "safe", online = false }: {
+export function PanelMineMap({ activePin, setActivePin, nodeName, riskStatus = "safe", online = false, hasReading = false }: {
   activePin: string | null;
   setActivePin: (id: string | null) => void;
   nodeName?: string;
   riskStatus?: RiskStatus;
   online?: boolean;
+  hasReading?: boolean;
 }) {
-  const pins: SensorPin[] = [
+  const pins: SensorPin[] = hasReading && nodeName ? [
     { id: nodeName, cx: 258, cy: 172, status: riskStatus },
-  ];
+  ] : [];
 
   return (
     <div className="relative w-full h-full rounded overflow-hidden" style={{ height: "100%", background: THEME.background }}>
@@ -315,7 +307,7 @@ export function PanelMineMap({ activePin, setActivePin, nodeName = "MS-1", riskS
               </text>
               <text x={pin.cx} y={pin.cy + 38} textAnchor="middle" fontSize={6}
                 fill={col} fontFamily="JetBrains Mono, monospace" letterSpacing="0.5">
-                {online ? "ONLINE" : "OFFLINE"}
+                {online ? "FRESH DATA" : "STALE / UNKNOWN"}
               </text>
               {isActive && (
                 <rect x={pin.cx - 34} y={pin.cy + 8} width={68} height={20} rx={2}
@@ -708,7 +700,13 @@ function AlertPanel({ alerts, onAck }: { alerts: Alert[]; onAck: (id: string) =>
   );
 }
 
-function NetworkStatus({ nodes, allNodesLatest, allNodesRisk, lastSyncAgo }: { nodes: string[]; allNodesLatest: any[]; allNodesRisk: any[]; lastSyncAgo?: string }) {
+function NetworkStatus({ nodes, allNodesLatest, allNodesRisk }: { nodes: string[]; allNodesLatest: any[]; allNodesRisk: any[] }) {
+  const freshNodeCount = nodes.filter(nodeId => {
+    const reading = allNodesLatest.find(item => item.node_id === nodeId);
+    if (!reading) return false;
+    const age = Date.now() - new Date(reading.received_at ?? reading.timestamp).getTime();
+    return Number.isFinite(age) && age >= -60_000 && age <= 30_000;
+  }).length;
   const nodeRows = nodes.length > 0 ? nodes.map(nodeId => {
     const reading = allNodesLatest.find(r => r.node_id === nodeId);
     const risk = allNodesRisk.find(r => r.node_id === nodeId);
@@ -716,9 +714,9 @@ function NetworkStatus({ nodes, allNodesLatest, allNodesRisk, lastSyncAgo }: { n
     const status: RiskStatus = levelStr.includes("critical") ? "critical" : levelStr.includes("high") ? "danger" : levelStr.includes("warn") ? "warning" : "safe";
     return {
       id: nodeId,
-      location: `Panel-B (${nodeId})`,
+      location: "Not configured",
       status,
-      seen: reading ? lastSyncAgo || "Live" : "No data",
+      seen: reading ? new Date(reading.received_at ?? reading.timestamp).toLocaleString() : "No reading",
     };
   }) : [
     { id: "No Nodes", location: "Waiting for backend data", status: "safe" as RiskStatus, seen: "—" }
@@ -736,9 +734,9 @@ function NetworkStatus({ nodes, allNodesLatest, allNodesRisk, lastSyncAgo }: { n
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full live-blink" style={{ background: nodes.length > 0 ? "#22c55e" : "#ef4444" }} />
-          <span className="text-[9px] font-mono" style={{ color: nodes.length > 0 ? "#22c55e" : "#ef4444" }}>
-            {nodes.length > 0 ? `${nodes.length}/${nodes.length} ONLINE` : "NO NODES"}
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: freshNodeCount > 0 ? "#22c55e" : nodes.length > 0 ? "#eab308" : "#94A3AE" }} />
+          <span className="text-[9px] font-mono" style={{ color: freshNodeCount > 0 ? "#22c55e" : "#eab308" }}>
+            {nodes.length > 0 ? `${freshNodeCount}/${nodes.length} FRESH` : "NO NODES REPORTED"}
           </span>
         </div>
       </div>
@@ -747,7 +745,7 @@ function NetworkStatus({ nodes, allNodesLatest, allNodesRisk, lastSyncAgo }: { n
         <table className="w-full text-[9px] font-mono">
           <thead>
             <tr style={{ borderBottom: `1px solid ${THEME.border}` }}>
-              {['Node', 'Location', 'Risk Status', 'Updated'].map(h => (
+          {['Node', 'Location', 'Risk Status', 'Last Measurement'].map(h => (
                 <th key={h} className="text-left px-3 py-2 font-normal tracking-widest uppercase"
                   style={{ color: THEME.mutedText, letterSpacing: "1px" }}>{h}</th>
               ))}
@@ -789,7 +787,7 @@ function DigitalTwin() {
         <div className="flex items-center gap-2">
           <Layers size={13} style={{ color: THEME.accent }} />
           <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: THEME.mutedText }}>
-            Digital Twin
+            Illustrative Mine Schematic
           </span>
         </div>
         <div className="flex rounded overflow-hidden" style={{ border: `1px solid ${THEME.border}` }}>
@@ -821,7 +819,7 @@ function DigitalTwin() {
                 <text x={x} y={17 + i * 3} textAnchor="middle" fontSize={6} fill="#3a7a6a" fontFamily="JetBrains Mono">S{i + 1}</text>
               </g>
             ))}
-            <text x={185} y={22} textAnchor="middle" fontSize={7} fill="#ef4444" fontFamily="JetBrains Mono">▲ 8.7mm</text>
+            <text x={185} y={22} textAnchor="middle" fontSize={7} fill="#94A3AE" fontFamily="JetBrains Mono">SCHEMATIC ONLY</text>
             {[
               { y: 60, h: 20, color: "#1a2820", label: "Topsoil / Alluvium" },
               { y: 80, h: 30, color: "#131e22", label: "Sandstone / Shale" },
@@ -917,10 +915,10 @@ function StatCard({ label, value, sub, icon: Icon, col }: {
 export default function Overview() {
   const live = useLiveSensorData();
   const [activePin, setActivePin] = useState<string | null>(null);
-  const [riskScore, setRiskScore] = useState(0);
+  const [riskScore, setRiskScore] = useState<number>();
   const [anomaly, setAnomaly] = useState(0);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [sensorData, setSensorData] = useState(() => SENSOR_DEFS.map(s => ({ ...s, value: 0, data: [] })));
+  const [sensorData, setSensorData] = useState<LiveSensorDef[] | null>(null);
   const [liveChartData, setLiveChartData] = useState({
     tilt: [] as DataPt[],
     disp: [] as DataPt[],
@@ -929,7 +927,7 @@ export default function Overview() {
     hum: [] as DataPt[],
   });
 
-  const nodeName = live.selectedNode || "MS-1";
+  const nodeName = live.selectedNode || "No node selected";
 
   useEffect(() => {
     const reading = live.latest;
@@ -940,7 +938,7 @@ export default function Overview() {
       v: key === "tilt_x" ? item.tilt_angle : parseFloat(Number(item[key]).toFixed(3)),
     }));
     
-    setRiskScore(live.risk?.risk_score ?? 0);
+    setRiskScore(live.risk?.risk_score);
     setAnomaly((live.risk?.anomaly_score ?? 0) * 100);
     setAlerts(live.risk?.alert ? [{ id: String(reading.id), sev: live.risk.risk_level === "CRITICAL" ? "critical" : "warning", msg: live.risk.reasons.join("; ") || "Backend risk alert", loc: `Node ${reading.node_id}`, time: new Date(reading.timestamp).toLocaleTimeString(), ack: false }] : []);
     
@@ -986,15 +984,16 @@ export default function Overview() {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden" style={{ fontFamily: "Inter, sans-serif", background: THEME.background, color: THEME.foreground }}>
+    <div className="flex h-full w-full flex-col overflow-hidden" style={{ fontFamily: "Inter, sans-serif", background: "rgba(7, 11, 14, 0.48)", color: THEME.foreground }}>
       <style>{ANIM_CSS}</style>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {live.error && <div className="rounded border p-3 text-xs" role="status" style={{ borderColor: "rgba(245,196,81,0.35)", background: "rgba(245,196,81,0.08)", color: "#F5C451" }}>{live.error}{live.latest && ` · Showing last stored reading from ${new Date(live.latest.timestamp).toLocaleString()}.`}</div>}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <StatCard label="Active Sensors" value={live.status === "LIVE" ? "1 / 1 Online" : "0 / 1 Online"} sub={live.status === "LIVE" ? `Node ${nodeName} active` : `Node ${nodeName} offline`} icon={Radio} col={live.status === "LIVE" ? "#22c55e" : "#ef4444"} />
-          <StatCard label="Active Alerts" value={`${unackCount} Alert${unackCount !== 1 ? "s" : ""}`} sub={unackCount > 0 ? "Requires attention" : "Normal state"} icon={AlertTriangle} col={unackCount > 0 ? "#ef4444" : "#22c55e"} />
-          <StatCard label="AI Risk Level" value={live.risk?.risk_level || "NORMAL"} sub={live.risk?.ai_available ? "Isolation Forest active" : "Baseline learning"} icon={Wifi} col={live.risk?.risk_level === "CRITICAL" ? "#ef4444" : live.risk?.risk_level === "HIGH_RISK" ? "#f97316" : live.risk?.risk_level === "WARNING" ? "#eab308" : "#00c4ad"} />
-          <StatCard label="Last Reading" value={live.lastSyncAgo || "—"} sub={live.latest ? `Node ${live.latest.node_id}` : "Waiting for packet"} icon={Activity} col="#06cee8" />
+          <StatCard label="Backend Nodes" value={`${live.nodes.length} reported`} sub={live.status} icon={Radio} col={live.status === "LIVE" ? "#22c55e" : live.status === "OFFLINE" ? "#ef4444" : "#eab308"} />
+          <StatCard label="Active Alerts" value={live.latest ? `${unackCount} Alert${unackCount !== 1 ? "s" : ""}` : "Unavailable"} sub={!live.latest ? "Waiting for sensor reading" : unackCount > 0 ? "Requires attention" : "No backend alerts"} icon={AlertTriangle} col={unackCount > 0 ? "#ef4444" : "#94A3AE"} />
+          <StatCard label="AI Risk Level" value={live.risk?.risk_level || "Unavailable"} sub={live.risk ? (live.risk.ai_available ? "Isolation Forest active" : "Threshold-based backend analysis") : "Waiting for backend assessment"} icon={Wifi} col={live.risk?.risk_level === "CRITICAL" ? "#ef4444" : live.risk?.risk_level === "HIGH_RISK" ? "#f97316" : live.risk?.risk_level === "WARNING" ? "#eab308" : "#94A3AE"} />
+          <StatCard label="Last Measurement" value={live.latest ? new Date(live.latest.timestamp).toLocaleTimeString() : "Unavailable"} sub={live.latest ? `Node ${live.latest.node_id} · ${live.status}` : "Waiting for backend packet"} icon={Activity} col="#06cee8" />
         </div>
 
         <div className="grid gap-2.5" style={{ gridTemplateColumns: "268px 1fr 288px", gridTemplateRows: "370px" }}>
@@ -1008,12 +1007,14 @@ export default function Overview() {
               </span>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-3">
-              <CircularGauge score={Math.round(riskScore)} />
+              {riskScore === undefined
+                ? <div className="text-center text-sm" style={{ color: THEME.mutedText }}>Waiting for backend risk analysis</div>
+                : <CircularGauge score={Math.round(riskScore)} />}
               <div className="w-full space-y-1.5 px-1">
                 {riskMetrics.map(m => (
                   <div key={m.label} className="flex items-center justify-between">
                     <span className="text-[9px] font-mono" style={{ color: THEME.mutedText }}>{m.label}</span>
-                    <span className="text-[10px] font-mono font-medium" style={{ color: m.col }}>{Math.round(m.score)}% · {m.value}</span>
+                    <span className="text-[10px] font-mono font-medium" style={{ color: live.risk ? m.col : THEME.mutedText }}>{live.risk ? `${Math.round(m.score)}% · ${m.value}` : "Unavailable"}</span>
                   </div>
                 ))}
               </div>
@@ -1027,41 +1028,41 @@ export default function Overview() {
               <div className="flex items-center gap-2">
                 <MapPin size={13} style={{ color: THEME.primary }} />
                 <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: THEME.mutedText, letterSpacing: "2px" }}>
-                  GIS Mine Plan · Panel-B Active Zone
+                  Illustrative mine-plan schematic · not surveyed
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[8px] font-mono" style={{ color: THEME.mutedText }}>
-                  Node {nodeName} Active
+                  {live.latest ? `Node ${nodeName} · ${live.status}` : "No sensor position available"}
                 </span>
                 <div className="w-1.5 h-1.5 rounded-full live-blink" style={{ background: "#00c4ad" }} />
               </div>
             </div>
             <div className="flex-1 p-2">
-              <PanelMineMap activePin={activePin} setActivePin={setActivePin} nodeName={nodeName} riskStatus={currentRiskStatus} online={live.status === "LIVE"} />
+          <PanelMineMap activePin={activePin} setActivePin={setActivePin} nodeName={live.selectedNode} riskStatus={currentRiskStatus} online={live.status === "LIVE"} hasReading={Boolean(live.latest)} />
             </div>
           </div>
 
-          <AIPanel anomaly={anomaly} riskScore={Math.round(riskScore)} risk={live.risk} health={live.health} reading={live.latest} />
+          <AIPanel anomaly={anomaly} riskScore={Math.round(riskScore ?? 0)} risk={live.risk} health={live.health} reading={live.latest} />
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5">
-          {sensorData.map(s => (
+          {sensorData ? sensorData.map(s => (
             <SensorCard key={s.id} def={s} data={s.data} />
-          ))}
+          )) : <div className="col-span-full rounded border p-4 text-sm" style={{ color: THEME.mutedText, borderColor: THEME.border }}>Waiting for the first sensor reading for {live.selectedNode ?? "the selected node"}.</div>}
         </div>
 
         <div className="grid gap-2.5" style={{ gridTemplateColumns: "2fr 1fr", gridTemplateRows: "280px" }}>
           <RealTimeChart datasets={[
             { label: "Tilt", data: liveChartData.tilt, color: "#eab308", unit: "°" },
-            { label: "Displacement", data: liveChartData.disp, color: "#f97316", unit: "mm" },
+            { label: "Distance", data: liveChartData.disp, color: "#f97316", unit: "cm" },
             { label: "Vibration", data: liveChartData.vib, color: "#ef4444", unit: "g" },
           ]} />
           <AlertPanel alerts={alerts} onAck={ackAlert} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
-          <NetworkStatus nodes={[nodeName]} allNodesLatest={live.allNodesLatest} allNodesRisk={live.allNodesRisk} lastSyncAgo={live.lastSyncAgo} />
+          <NetworkStatus nodes={live.nodes} allNodesLatest={live.allNodesLatest} allNodesRisk={live.allNodesRisk} />
           <DigitalTwin />
         </div>
 

@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type Health, type Reading, type Risk } from "../services/api";
 
-const POLL_MS = 1000;
+const POLL_MS = 500;
 const HISTORY_LIMIT = 300;
 const LIVE_READING_MAX_AGE_MS = 30_000;
-function one<T>(value: T | T[]): T | undefined { return Array.isArray(value) ? value[0] : value; }
-
+const PHYSICAL_NODE_ID = "MS-1";
 export function useSensorData() {
   const [nodes, setNodes] = useState<string[]>([]);
-  const [selectedNode, setSelectedNode] = useState<string | undefined>();
+  const [selectedNode, setSelectedNode] = useState<string | undefined>(PHYSICAL_NODE_ID);
   const [latest, setLatest] = useState<Reading>();
   const [history, setHistory] = useState<Reading[]>([]);
   const [risk, setRisk] = useState<Risk>();
@@ -18,16 +17,17 @@ export function useSensorData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [backendOnline, setBackendOnline] = useState(false);
-  const [gatewayOffline, setGatewayOffline] = useState(false);
+  const [readingStale, setReadingStale] = useState(false);
   const lastFetchTime = useRef<number>(0);
-  const latestKey = useRef<number | null>(null);
   const requestSequence = useRef(0);
+  const selectedNodeRef = useRef<string | undefined>(selectedNode);
+  selectedNodeRef.current = selectedNode;
 
   const refresh = useCallback(async () => {
     const sequence = ++requestSequence.current;
     try {
       const [healthResp, latestResp, riskResp] = await Promise.all([
-        api.health().catch(() => ({ status: "ok", ai_available: false })),
+        api.health().catch(() => ({ status: "unknown", ai_available: false })),
         api.latest(),
         api.risk().catch(() => undefined),
       ]);
@@ -37,14 +37,14 @@ export function useSensorData() {
       const readings = Array.isArray(latestResp) ? latestResp : [latestResp];
       const risks = riskResp ? (Array.isArray(riskResp) ? riskResp : [riskResp]) : [];
       const newest = [...readings].sort((a, b) => b.id - a.id)[0];
-      const activeNode = selectedNode && readings.some(item => item.node_id === selectedNode)
-        ? selectedNode
+      const currentSelectedNode = selectedNodeRef.current;
+      const activeNode = currentSelectedNode && readings.some(item => item.node_id === currentSelectedNode)
+        ? currentSelectedNode
         : newest?.node_id;
       const reading = readings.find(item => item.node_id === activeNode);
       const riskData = risks.find(item => item.node_id === activeNode);
-      const readingIsFresh = Boolean(
+      const readingIsValid = Boolean(
         reading && Number.isFinite(new Date(reading.timestamp).getTime())
-          && Date.now() - new Date(reading.timestamp).getTime() <= LIVE_READING_MAX_AGE_MS,
       );
 
       setNodes(readings.map(item => item.node_id).sort());
@@ -52,56 +52,67 @@ export function useSensorData() {
       setAllNodesLatest(readings);
       setAllNodesRisk(risks);
 
-      if (reading && readingIsFresh) {
-        setGatewayOffline(false);
-        if (latestKey.current === null || reading.id >= latestKey.current) {
-          latestKey.current = reading.id;
-          setLatest(reading);
-          setHistory(prev => {
-            const exists = prev.some(item => item.id === reading.id || item.timestamp === reading.timestamp);
-            if (exists) return prev;
-            return [...prev, reading].slice(-HISTORY_LIMIT);
-          });
-        }
+      if (reading && readingIsValid) {
+        const age = Date.now() - new Date(reading.received_at ?? reading.timestamp).getTime();
+        setReadingStale(age > LIVE_READING_MAX_AGE_MS || age < -60_000);
+        setLatest(previous => !previous || previous.node_id !== reading.node_id || reading.id >= previous.id ? reading : previous);
+        setHistory(prev => {
+          const exists = prev.some(item => item.id === reading.id || item.timestamp === reading.timestamp);
+          if (exists) return prev;
+          return [...prev, reading].slice(-HISTORY_LIMIT);
+        });
+      } else if (reading) {
+        setReadingStale(true);
       } else {
-        setGatewayOffline(true);
+        setReadingStale(true);
         setLatest(undefined);
         setHistory([]);
       }
 
-      if (riskData && readingIsFresh) {
+      if (riskData && readingIsValid) {
         setRisk(riskData);
       } else {
         setRisk(undefined);
       }
 
+      setError(reading && !readingIsValid ? "Backend returned a reading with an invalid timestamp; keeping the last valid reading." : undefined);
       setBackendOnline(true);
       lastFetchTime.current = Date.now();
     } catch (cause) {
       setBackendOnline(false);
-      setGatewayOffline(true);
+      setReadingStale(true);
       setError(cause instanceof Error ? cause.message : "Backend unavailable");
-      // Never continue presenting an old packet as current telemetry.
-      setLatest(undefined);
-      setRisk(undefined);
-      setAllNodesLatest([]);
-      setAllNodesRisk([]);
-      setHistory([]);
+      // Keep the last valid packet visible; status and error mark it unavailable/stale.
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), POLL_MS);
-    return () => window.clearInterval(timer);
+    let active = true;
+    let timer: number | undefined;
+    const poll = async () => {
+      await refresh();
+      if (active) timer = window.setTimeout(() => void poll(), POLL_MS);
+    };
+    void poll();
+    return () => {
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
   }, [refresh]);
 
   useEffect(() => {
+    let active = true;
+    if (latest && latest.node_id !== selectedNode) {
+      setLatest(undefined);
+      setRisk(undefined);
+      setHistory([]);
+    }
     if (selectedNode) {
       api.history(selectedNode, HISTORY_LIMIT)
         .then(h => {
+          if (!active || selectedNodeRef.current !== selectedNode) return;
           if (Array.isArray(h) && h.length > 0) {
             setHistory(prev => {
               const merged = [...h, ...prev]
@@ -110,24 +121,21 @@ export function useSensorData() {
               return merged.slice(-HISTORY_LIMIT);
             });
             const newest = h[h.length - 1];
-            if (newest && (latestKey.current === null || newest.id >= latestKey.current)) {
-              latestKey.current = newest.id;
-              setLatest(newest);
-            }
+            if (newest) setLatest(previous => !previous || previous.node_id !== newest.node_id || newest.id >= previous.id ? newest : previous);
           }
       })
         .catch(() => undefined);
     } else {
       setHistory([]);
     }
+    return () => { active = false; };
   }, [selectedNode]);
 
   const status = useMemo(() => {
     if (!backendOnline) return "OFFLINE";
-    if (gatewayOffline) return "OFFLINE";
     if (!latest) return "WAITING FOR DATA";
-    return Date.now() - new Date(latest.timestamp).getTime() > LIVE_READING_MAX_AGE_MS ? "OFFLINE" : "LIVE";
-  }, [backendOnline, gatewayOffline, latest]);
+    return readingStale ? "STALE" : "LIVE";
+  }, [backendOnline, readingStale, latest]);
 
   const [, setTick] = useState(0);
   useEffect(() => {

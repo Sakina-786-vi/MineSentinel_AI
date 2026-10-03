@@ -10,15 +10,19 @@ export default function Header({ alertCount = 0, status, latest, lastSyncAgo }: 
 
   const critical = alertCount;
   const isLive = status === "LIVE";
-  const statusColor = isLive ? "#32D583" : "#FF4D5A";
-  const statusLabel = isLive ? "LIVE MONITORING" : status === "OFFLINE" ? "OFFLINE" : "CONNECTING";
+  const statusColor = isLive ? "#32D583" : status === "OFFLINE" ? "#FF4D5A" : "#F5C451";
+  const statusLabel = isLive ? "LIVE MONITORING"
+    : status === "OFFLINE" ? "BACKEND OFFLINE"
+      : status === "STALE" ? "STALE SENSOR DATA"
+        : status === "WAITING FOR DATA" ? "WAITING FOR SENSOR DATA" : "CONNECTING";
 
   return (
     <header style={{
-      height: 52, background: "#0B1117",
+      height: 52, background: "rgba(11, 17, 23, 0.94)",
       borderBottom: "1px solid #263542",
       display: "flex", alignItems: "center",
       padding: "0 20px", gap: 16, flexShrink: 0,
+      backdropFilter: "blur(8px)",
     }}>
       {/* Site selector */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -39,7 +43,7 @@ export default function Header({ alertCount = 0, status, latest, lastSyncAgo }: 
         <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: statusColor }}>{statusLabel}</span>
       </div>
 
-      <div style={{ fontSize: 11, color: "#60717E" }}>Last sync <span style={{ color: "#94A3AE", fontFamily: "JetBrains Mono" }}>{lastSyncAgo || "—"}</span></div>
+      <div style={{ fontSize: 11, color: "#60717E" }}>API poll <span style={{ color: "#94A3AE", fontFamily: "JetBrains Mono" }}>{lastSyncAgo || "—"}</span></div>
 
       <div style={{ flex: 1 }}/>
 

@@ -31,6 +31,7 @@ export interface Alert {
   recommendation: string;
 }
 
+// Static design/demo fixtures only; live monitoring uses the FastAPI sensor API.
 export const SENSOR_NODES: SensorNode[] = [
   { id: "N01", label: "N01", status: "online", tilt: 0.21, displacement: 2.1, vibration: "low", temperature: 28.4, humidity: 62, battery: 94, signal: "strong", risk: "normal", riskScore: 12, lastUpdate: "4 sec", position: { x: 20, y: 20 } },
   { id: "N02", label: "N02", status: "online", tilt: 0.34, displacement: 3.8, vibration: "low", temperature: 28.7, humidity: 63, battery: 91, signal: "strong", risk: "normal", riskScore: 18, lastUpdate: "4 sec", position: { x: 50, y: 20 } },

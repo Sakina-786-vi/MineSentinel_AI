@@ -5,7 +5,7 @@ import { toRiskLevel } from "../types";
 export default function SensorNetwork() {
   const live = useLiveSensorData();
   const nodes = live.allNodesLatest.length > 0 ? live.allNodesLatest : (live.latest ? [live.latest] : []);
-  const online = nodes.filter(n => Date.now() - new Date(n.timestamp).getTime() <= 30000).length;
+  const online = nodes.filter(n => Date.now() - new Date(n.received_at ?? n.timestamp).getTime() <= 30000).length;
   const total = nodes.length;
 
   return (
@@ -28,7 +28,7 @@ export default function SensorNetwork() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
         {nodes.length > 0 ? (
           nodes.map(node => {
-            const isOnline = Date.now() - new Date(node.timestamp).getTime() <= 30000;
+            const isOnline = Date.now() - new Date(node.received_at ?? node.timestamp).getTime() <= 30000;
             const nodeRisk = live.allNodesRisk.find(r => r.node_id === node.node_id);
             const riskLevel = toRiskLevel(nodeRisk?.risk_level);
             const tiltVal = node.tilt_angle.toFixed(2);
@@ -52,7 +52,7 @@ export default function SensorNetwork() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", marginBottom: 10 }}>
                   {[
                     ["Tilt", `${tiltVal}°`],
-                    ["Displacement", `${node.distance.toFixed(1)} mm`],
+                    ["Distance", `${node.distance.toFixed(1)} cm`],
                     ["Temperature", `${node.temperature.toFixed(1)}°C`],
                     ["Humidity", `${node.humidity.toFixed(1)}%`],
                   ].map(([l, v]) => (
@@ -75,7 +75,7 @@ export default function SensorNetwork() {
                 </div>
 
                 <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #1B2733", fontSize: 10, color: "#60717E" }}>
-                  Last comm: <span style={{ color: "#94A3AE", fontFamily: "JetBrains Mono" }}>{new Date(node.timestamp).toLocaleTimeString()}</span>
+                  Last comm: <span style={{ color: "#94A3AE", fontFamily: "JetBrains Mono" }}>{new Date(node.received_at ?? node.timestamp).toLocaleTimeString()}</span>
                 </div>
               </div>
             );

@@ -1,0 +1,56 @@
+.ml-simulator-page { height: 100%; overflow-y: auto; padding: 22px 24px 34px; color: #e8eef2; }
+.sim-page-header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 0 auto 18px; max-width: 1600px; }
+.sim-page-header h1 { margin: 5px 0 4px; font-size: 22px; line-height: 1.2; font-weight: 650; }
+.sim-page-header p { margin: 0; color: #94a3ae; font-size: 12px; }
+.sim-eyebrow { display: flex; gap: 7px; align-items: center; color: #27b7d7; font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .08em; }
+.synthetic-badge { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(245,196,81,.45); padding: 8px 10px; color: #f5c451; background: rgba(54,44,21,.7); font: 700 10px 'JetBrains Mono', monospace; white-space: nowrap; }
+.synthetic-badge span { width: 7px; height: 7px; border-radius: 50%; background: #f5c451; box-shadow: 0 0 10px rgba(245,196,81,.65); }
+.sim-layout { max-width: 1600px; margin: auto; display: grid; grid-template-columns: 250px minmax(0, 1fr); align-items: start; gap: 14px; }
+.sim-panel { border: 1px solid rgba(48,64,77,.9); background: rgba(11,17,23,.92); }
+.sim-controls { padding: 14px; position: sticky; top: 0; }
+.sim-panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 20px; }
+.sim-panel-heading h2 { margin: 0; font-size: 12px; line-height: 1.4; font-weight: 650; color: #e8eef2; }
+.sim-panel-heading > span:not(.sim-model-chip) { color: #60717e; font: 10px 'JetBrains Mono', monospace; }
+.sim-state { text-transform: uppercase; }
+.state-running { color: #32d583 !important; }.state-paused { color: #f5c451 !important; }.state-completed { color: #27b7d7 !important; }
+.sim-controls label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 7px; margin-top: 17px; color: #94a3ae; font-size: 11px; }
+.sim-controls label strong { color: #e8eef2; font: 11px 'JetBrains Mono', monospace; }
+.sim-controls select { flex: 1 0 100%; min-width: 0; padding: 8px 9px; background: #111a23; border: 1px solid #30404d; border-radius: 3px; color: #e8eef2; font: inherit; }
+.sim-controls input[type=range] { flex: 1 0 100%; accent-color: #27b7d7; height: 4px; }
+.sim-control-actions { display: flex; gap: 6px; margin-top: 20px; }
+.sim-button,.sim-icon-button { min-height: 34px; border: 1px solid #30404d; border-radius: 3px; background: #16212c; color: #d9e2e8; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; font: 600 10px inherit; cursor: pointer; }
+.sim-button { flex: 1; }.sim-start { background: #1a5e70; border-color: #27859a; color: #e8fbff; }.sim-icon-button { width: 36px; padding: 0; }
+.sim-button:disabled { opacity: .48; cursor: not-allowed; }
+.sim-clock { margin-top: 17px; padding: 10px; display: grid; gap: 6px; background: rgba(22,33,44,.72); border-left: 2px solid #27b7d7; }
+.sim-clock span,.sim-clock small { color: #60717e; font: 9px 'JetBrains Mono', monospace; }.sim-clock strong { font: 600 16px 'JetBrains Mono', monospace; color: #e8eef2; }
+.sim-safety-note { color: #8695a0; font-size: 10px; line-height: 1.55; margin: 14px 0 0; }
+.sim-main-column { display: grid; gap: 12px; min-width: 0; }
+.sim-pipeline { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; overflow: hidden; }
+.sim-pipeline-stage { display: flex; align-items: center; gap: 7px; position: relative; min-width: 0; }
+.sim-pipeline-stage span { color: #27b7d7; font: 10px 'JetBrains Mono', monospace; }.sim-pipeline-stage strong { color: #c7d1d8; font: 600 9px 'JetBrains Mono', monospace; white-space: nowrap; }
+.sim-pipeline-stage i { display: block; width: clamp(8px, 2vw, 30px); height: 1px; margin: 0 2px; background: #30404d; }
+.sim-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sim-chart-panel { padding: 11px 12px 7px; min-width: 0; }.sim-panel-heading > span { font-size: 10px; }
+.sim-chart { height: 190px; margin-top: 9px; }
+.sim-ai-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.sim-ai-panel { padding: 13px; min-width: 0; }.sim-model-chip { color: #27b7d7; font: 9px 'JetBrains Mono', monospace; text-align: right; }
+.sim-score-line { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; }.sim-score-line strong { font: 600 28px 'JetBrains Mono', monospace; }.sim-score-line > span { font: 700 10px 'JetBrains Mono', monospace; }
+.sim-ai-panel p,.sim-risk-summary p { color: #8695a0; font-size: 10px; line-height: 1.5; margin: 9px 0 0; }
+.sim-ok { color: #32d583 !important; }.sim-warn { color: #f5c451 !important; }
+.sim-forecast { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; }.sim-forecast > div { display: grid; gap: 5px; }.sim-forecast small { color: #60717e; font-size: 9px; }.sim-forecast strong { font: 600 19px 'JetBrains Mono', monospace; }.sim-forecast > b { color: #27b7d7; }
+.sim-model-warning { display: block; color: #f5c451; font-size: 9px; line-height: 1.5; margin-top: 7px; }
+.sim-risk-panel,.sim-physics-panel,.sim-table-panel,.sim-log-panel { padding: 13px; }
+.sim-risk-summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; }.sim-risk-summary > div:first-child { min-width: 0; }
+.sim-risk-badge { display: grid; gap: 3px; min-width: 88px; padding: 8px 10px; text-align: center; border: 1px solid #30404d; background: #111a23; }.sim-risk-badge small,.sim-risk-badge span { color: #94a3ae; font: 9px 'JetBrains Mono', monospace; }.sim-risk-badge strong { font: 700 14px 'JetBrains Mono', monospace; }
+.risk-safe strong { color: #32d583; }.risk-warning strong { color: #f5c451; }.risk-high strong { color: #f28c38; }.risk-critical strong { color: #ff4d5a; }
+.sim-evidence-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px 12px; margin-top: 14px; }.sim-evidence { display: flex; align-items: center; gap: 8px; color: #aab6bf; font-size: 10px; }.sim-evidence > span:first-child { font: 700 8px 'JetBrains Mono', monospace; }.sim-evidence .is-confirmed { color: #32d583; }.sim-evidence .is-pending { color: #60717e; }
+.sim-reasons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }.sim-reasons span { color: #c7d1d8; background: rgba(22,33,44,.8); border-left: 2px solid #60717e; padding: 6px 8px; font-size: 9px; line-height: 1.4; }.sim-risk-badge.risk-high { border-color: rgba(242,140,56,.5); }.sim-risk-badge.risk-critical { border-color: rgba(255,77,90,.55); }
+.sim-physics-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); margin: 12px 0 10px; }.sim-physics-grid > div { display: grid; gap: 6px; padding: 9px 10px; border-left: 1px solid #30404d; }.sim-physics-grid > div:first-child { border-left: 0; padding-left: 0; }.sim-physics-grid small { color: #60717e; font: 9px 'JetBrains Mono',monospace; }.sim-physics-grid strong { font: 600 17px 'JetBrains Mono',monospace; }.sim-physics-grid span,.sim-footnote { color: #8695a0; font-size: 9px; line-height: 1.45; }.sim-footnote { display: block; border-top: 1px solid #263542; padding-top: 8px; }
+.sim-table-wrap { width: 100%; overflow: auto; margin-top: 10px; }.sim-table-wrap table { border-collapse: collapse; min-width: 900px; width: 100%; font-size: 10px; }.sim-table-wrap th { text-align: left; color: #60717e; font: 9px 'JetBrains Mono',monospace; padding: 8px 7px; border-bottom: 1px solid #30404d; white-space: nowrap; }.sim-table-wrap td { padding: 8px 7px; border-bottom: 1px solid rgba(38,53,66,.75); color: #c7d1d8; white-space: nowrap; }.sim-node-id { color: #27b7d7 !important; font-family: 'JetBrains Mono',monospace; }.sim-table-risk { padding: 3px 5px; border: 1px solid #30404d; font: 700 8px 'JetBrains Mono',monospace; }.sim-table-risk.risk-warning { color: #f5c451; }.sim-table-risk.risk-high { color: #f28c38; }.sim-table-risk.risk-safe { color: #32d583; }
+.sim-empty { padding: 18px; color: #60717e; text-align: center; font-size: 10px; }
+.sim-event-list { margin-top: 11px; }.sim-event { display: grid; grid-template-columns: 8px minmax(0,1fr) auto; gap: 9px; align-items: start; padding: 8px 0; border-top: 1px solid rgba(38,53,66,.7); }.sim-event-dot { width: 6px; height: 6px; margin-top: 4px; border-radius: 50%; background: #27b7d7; }.sim-event strong { color: #dce5ea; font-size: 10px; }.sim-event p { margin: 3px 0 0; color: #8695a0; font-size: 9px; line-height: 1.4; }.sim-event time { color: #60717e; font: 9px 'JetBrains Mono',monospace; white-space: nowrap; }
+.sim-model-details { color: #94a3ae; font-size: 10px; padding: 5px 2px 12px; }.sim-model-details summary { cursor: pointer; color: #27b7d7; }.sim-model-details p { line-height: 1.6; }
+.sim-error { max-width: 1600px; margin: 0 auto 12px; border-left: 3px solid #ff4d5a; padding: 9px 12px; background: rgba(55,21,26,.9); color: #ffc6cb; font-size: 11px; }
+@media (max-width: 1150px) { .sim-layout { grid-template-columns: 220px minmax(0,1fr); }.sim-pipeline { flex-wrap: wrap; justify-content: flex-start; gap: 9px; }.sim-pipeline-stage i { width: 12px; } }
+@media (max-width: 850px) { .ml-simulator-page { padding: 16px 12px 28px; }.sim-layout { grid-template-columns: 1fr; }.sim-controls { position: static; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: 12px; }.sim-controls > .sim-panel-heading,.sim-control-actions,.sim-clock,.sim-safety-note { grid-column: 1 / -1; }.sim-controls label { margin-top: 11px; }.sim-controls .sim-panel-heading { margin-bottom: 2px; }.sim-chart-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .sim-page-header { align-items: flex-start; flex-direction: column; }.sim-page-header h1 { font-size: 19px; }.sim-ai-grid { grid-template-columns: 1fr; }.sim-evidence-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.sim-physics-grid { grid-template-columns: repeat(2,minmax(0,1fr)); row-gap: 12px; }.sim-physics-grid > div:nth-child(3) { border-left: 0; padding-left: 0; }.sim-risk-summary { align-items: flex-start; }.sim-model-chip { max-width: 48%; }.sim-controls { grid-template-columns: 1fr; }.sim-controls > .sim-panel-heading,.sim-control-actions,.sim-clock,.sim-safety-note { grid-column: auto; } }
